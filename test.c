@@ -15,6 +15,18 @@ void print_list(list_head *head) {
     printf("\n");
 }
 
+void print_list_reverse(list_head *head) {
+    struct list_head *pos;
+    node_t *entry1;
+    printf("Reversed List: ");
+    for (pos = (head)->prev; pos != (head); pos = pos->prev){
+        entry1 = list_entry(pos, node_t, list);
+        printf("%ld ", entry1->data);
+    }
+    printf("\n");
+}
+
+
 int main() {
     list_head *head = list_new();
     if (!head) {
@@ -25,12 +37,15 @@ int main() {
     // Test insert
     list_insert(head, 20);
     print_list(head);
+    print_list_reverse(head);
 
     list_insert(head, 10);
     print_list(head);
+    print_list_reverse(head);
 
     list_insert(head, 30);
     print_list(head);
+    print_list_reverse(head);
 
     // list_insert(head, 20);
     // print_list(head);

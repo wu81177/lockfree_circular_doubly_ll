@@ -122,18 +122,16 @@ bool list_insert(list_head *head, val_t val)
         new_elem->next = right;
         new_elem->prev = left;
 
-        // if (left == head) {
-        //     if (CAS_PTR(&(head->next), head, new_elem)) {
-        //         head->prev = new_elem;
-        //         new_elem->next = head;
-        //         new_elem->prev = head;
-        //         return true;
-        //     }
-        //     continue;
-        // }
-
         if (CAS_PTR(&(left->next), right, new_elem) == right) {
-            left->next->prev = new_elem;
+            while (!CAS_PTR(&(right->prev), left, new_elem)) {
+                right = list_search(head, val, &left);
+                if (right != head->prev && list_entry(right, node_t, list)->data == val) {
+                    return false;
+                }
+                new_elem->next = right;
+                new_elem->prev = left;
+                CAS_PTR(&(left->next), right, new_elem);
+            }
             return true;
         }
     }
