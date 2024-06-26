@@ -46,8 +46,7 @@ void list_delete(list_head *set)
 
 static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 {   
-    if(head->next == head) return NULL;
-    if(head->next == head->prev) return head->next;
+    if(head->next == head) return head;
 
     list_head *left_node_next, *right_node;
     left_node_next = right_node = NULL;
@@ -85,7 +84,7 @@ bool list_insert(list_head *head, val_t val)
     node_t *new_elem_node = new_node(val, NULL, NULL);
     if (!new_elem_node) return false;
 
-    list_head *new_elem = &new_elem_node->list;
+    list_head *new_elem = &(new_elem_node->list);
 
     while (1) {
         list_head *right_node = list_search(head, val, &left);
@@ -96,6 +95,16 @@ bool list_insert(list_head *head, val_t val)
 
         new_elem->next = right;
         new_elem->prev = left;
+
+        if (left == NULL) {
+            if (CAS_PTR(&(head->next), head, new_elem)) {
+                head->prev = new_elem;
+                new_elem->next = head;
+                new_elem->prev = head;
+                return true;
+            }
+            continue;
+        }
 
         if (CAS_PTR(&(left->next), right, new_elem) == right) {
             left->next->prev = new_elem;

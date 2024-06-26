@@ -29,19 +29,35 @@ int main() {
         printf("Failed to insert 10\n");
     }
     print_list(head);
+
     if (list_insert(head, 20)) {
         printf("Inserted 20\n");
     } else {
         printf("Failed to insert 20\n");
     }
     print_list(head);
-    if (list_insert(head, 10)) {
+
+    if (list_insert(head, 30)) {
         printf("Inserted 10 again\n");
     } else {
         printf("Failed to insert 10 again\n");
     }
-
     print_list(head);
+
+    if (list_insert(head, 40)) {
+        printf("Inserted 10 again\n");
+    } else {
+        printf("Failed to insert 10 again\n");
+    }
+    print_list(head);
+
+    if (list_insert(head, 40)) {
+        printf("Inserted 10 again\n");
+    } else {
+        printf("Failed to insert 10 again\n");
+    }
+    print_list(head);
+
 
 
     // Clean up
