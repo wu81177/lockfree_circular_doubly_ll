@@ -26,17 +26,17 @@ int main() {
     list_insert(head, 20);
     print_list(head);
 
+    list_insert(head, 10);
+    print_list(head);
+
     list_insert(head, 30);
     print_list(head);
 
-    list_insert(head, 20);
-    print_list(head);
+    // list_insert(head, 20);
+    // print_list(head);
 
-    list_insert(head, 20);
-    print_list(head);
-
-    list_insert(head, 20);
-    print_list(head);
+    // list_insert(head, 20);
+    // print_list(head);
 
 
 

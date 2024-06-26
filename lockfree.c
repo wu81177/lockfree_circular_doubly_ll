@@ -24,11 +24,35 @@ static inline void *get_marked_ref(void *w)
 list_head *list_new()
 {
     list_head *head = malloc(sizeof(list_head));
-    if (head) {
-        INIT_LIST_HEAD(head);
+    if (!head) {
+        return NULL;
     }
+
+    node_t *min_node = malloc(sizeof(node_t));
+    if (!min_node) {
+        free(head);
+        return NULL;
+    }
+    min_node->data = INT_MIN;
+
+    node_t *max_node = malloc(sizeof(node_t));
+    if (!max_node) {
+        free(min_node);
+        free(head);
+        return NULL;
+    }
+    max_node->data = INT_MAX;
+
+    head->next = &min_node->list;
+    min_node->list.prev = head;
+    min_node->list.next = &max_node->list;
+    max_node->list.prev = &min_node->list;
+    max_node->list.next = head;
+    head->prev = &max_node->list;
+
     return head;
 }
+
 
 static node_t *new_node(val_t val, list_head *next_node, list_head *prev_node)
 {
@@ -46,7 +70,7 @@ void list_delete(list_head *set)
 
 static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 {   
-    if(head->next == head) return head;
+    //if(head->next == head) return head;
 
     list_head *left_node_next, *right_node;
     left_node_next = right_node = NULL;
@@ -59,7 +83,7 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
                 left_node_next = t_next;
             }
             t = t_next;
-            if (t == head)
+            if (list_entry(t, node_t, list)->data == INT_MAX)
                 break;
             t_next = t->next;
             printf("b");
@@ -80,7 +104,7 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 
 bool list_insert(list_head *head, val_t val)
 {
-    list_head *left = head;
+    list_head *left = NULL;
     list_head *right;
     node_t *new_elem_node = new_node(val, NULL, NULL);
     if (!new_elem_node) return false;
@@ -91,22 +115,22 @@ bool list_insert(list_head *head, val_t val)
         printf("c");
         list_head *right = list_search(head, val, &left);
 
-        if (right != head && list_entry(right, node_t, list)->data == val) {
+        if (right != head->prev && list_entry(right, node_t, list)->data == val) {
             return false;
         }
 
         new_elem->next = right;
         new_elem->prev = left;
 
-        if (left == head) {
-            if (CAS_PTR(&(head->next), head, new_elem)) {
-                head->prev = new_elem;
-                new_elem->next = head;
-                new_elem->prev = head;
-                return true;
-            }
-            continue;
-        }
+        // if (left == head) {
+        //     if (CAS_PTR(&(head->next), head, new_elem)) {
+        //         head->prev = new_elem;
+        //         new_elem->next = head;
+        //         new_elem->prev = head;
+        //         return true;
+        //     }
+        //     continue;
+        // }
 
         if (CAS_PTR(&(left->next), right, new_elem) == right) {
             left->next->prev = new_elem;
