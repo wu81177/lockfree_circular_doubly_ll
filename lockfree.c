@@ -62,9 +62,10 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
             if (t == head)
                 break;
             t_next = t->next;
+            printf("b");
         }
         right_node = t;
-
+        printf("a");
         if (left_node_next == right_node) {
             if (!is_marked_ref(list_entry(right_node->next, node_t, list)))
                 return right_node;
@@ -79,7 +80,7 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 
 bool list_insert(list_head *head, val_t val)
 {
-    list_head *left = NULL;
+    list_head *left = head;
     list_head *right;
     node_t *new_elem_node = new_node(val, NULL, NULL);
     if (!new_elem_node) return false;
@@ -87,7 +88,8 @@ bool list_insert(list_head *head, val_t val)
     list_head *new_elem = &(new_elem_node->list);
 
     while (1) {
-        list_head *right_node = list_search(head, val, &left);
+        printf("c");
+        list_head *right = list_search(head, val, &left);
 
         if (right != head && list_entry(right, node_t, list)->data == val) {
             return false;
@@ -96,7 +98,7 @@ bool list_insert(list_head *head, val_t val)
         new_elem->next = right;
         new_elem->prev = left;
 
-        if (left == NULL) {
+        if (left == head) {
             if (CAS_PTR(&(head->next), head, new_elem)) {
                 head->prev = new_elem;
                 new_elem->next = head;

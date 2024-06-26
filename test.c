@@ -23,39 +23,19 @@ int main() {
     }
 
     // Test insert
-    if (list_insert(head, 10)) {
-        printf("Inserted 10\n");
-    } else {
-        printf("Failed to insert 10\n");
-    }
+    list_insert(head, 20);
     print_list(head);
 
-    if (list_insert(head, 20)) {
-        printf("Inserted 20\n");
-    } else {
-        printf("Failed to insert 20\n");
-    }
+    list_insert(head, 30);
     print_list(head);
 
-    if (list_insert(head, 30)) {
-        printf("Inserted 10 again\n");
-    } else {
-        printf("Failed to insert 10 again\n");
-    }
+    list_insert(head, 20);
     print_list(head);
 
-    if (list_insert(head, 40)) {
-        printf("Inserted 10 again\n");
-    } else {
-        printf("Failed to insert 10 again\n");
-    }
+    list_insert(head, 20);
     print_list(head);
 
-    if (list_insert(head, 40)) {
-        printf("Inserted 10 again\n");
-    } else {
-        printf("Failed to insert 10 again\n");
-    }
+    list_insert(head, 20);
     print_list(head);
 
 
