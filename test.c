@@ -43,12 +43,12 @@ int main() {
     print_list(head);
     print_list_reverse(head);
 
-    list_insert(head, 40);
+    list_insert(head, 30);
     print_list(head);
     print_list_reverse(head);
 
-    list_remove(head,40);
+   // list_remove(head,20);
     print_list(head);
-    print_list_reverse(head);
+    //print_list_reverse(head);
     return EXIT_SUCCESS;
 }
