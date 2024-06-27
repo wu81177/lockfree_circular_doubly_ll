@@ -82,7 +82,7 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
                 (*left_node) = t;
                 left_node_next = t_next;
             }
-            t = t_next;
+            t = get_unmarked_ref(list_entry(t_next, node_t, list));
             if (list_entry(t, node_t, list)->data == INT_MAX)
                 break;
             t_next = t->next;
@@ -140,5 +140,19 @@ bool list_insert(list_head *head, val_t val)
 
 bool list_remove(list_head *head, val_t val)
 {
+    list_head *left = NULL;
+    while (1) {
+        list_head *right = list_search(head, val, &left);
+        /* check if we found our node */
+        if ((list_entry(right, node_t, list)->data == INT_MAX) || (list_entry(right, node_t, list)->data != val))
+            return false;
 
+        list_head *right_succ = right->next;
+        if (!is_marked_ref(list_entry(right_succ, node_t, list))) {
+            if (CAS_PTR(&(right->next), right_succ,
+                        get_marked_ref(list_entry(right_succ, node_t, list))) == list_entry(right_succ, node_t, list)) {
+                return true;
+            }
+        }
+    }
 }
