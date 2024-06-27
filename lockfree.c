@@ -105,7 +105,6 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 bool list_insert(list_head *head, val_t val)
 {
     list_head *left = NULL;
-    list_head *right;
     node_t *new_elem_node = new_node(val, NULL, NULL);
     if (!new_elem_node) return false;
 
@@ -140,20 +139,22 @@ bool list_insert(list_head *head, val_t val)
 
 bool list_remove(list_head *head, val_t val)
 {
-    // list_head *left = NULL;
-    // while (1) {
-    //     list_head *right = list_search(head, val, &left);
-    //     /* check if we found our node */
-    //     if ((list_entry(right, node_t, list)->data == INT_MAX) || 
-    //                 (list_entry(right, node_t, list)->data != val))
-    //         return false;
+    list_head *left = NULL;
+    while (1) {
+        list_head *right = list_search(head, val, &left);
+        /* check if we found our node */
+        if ((list_entry(right, node_t, list)->data == INT_MAX) || 
+                    (list_entry(right, node_t, list)->data != val))
+            return false;
 
-    //     list_head *right_succ = right->next;
-    //     if (!is_marked_ref(right_succ)) {
-    //         if (CAS_PTR(&(right->next), right_succ,
-    //                     get_marked_ref(right_succ)) == right_succ) {
-    //             return true;
-    //         }
-    //     }
-    // }
+        list_head *right_succ = right->next;
+        if (!is_marked_ref(right_succ)) {
+            // 標記 right_succ
+            if (CAS_PTR(&(right->next), right_succ, get_marked_ref(right_succ)) == right_succ) {
+                // 成功標記，更新 left 的 next 指標
+                if (CAS_PTR(&(left->next), right, right_succ) == right)
+                    return true;
+            }
+        }
+    }
 }
