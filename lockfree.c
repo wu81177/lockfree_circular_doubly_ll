@@ -148,12 +148,14 @@ bool list_remove(list_head *head, val_t val)
             return false;
 
         list_head *right_succ = right->next;
+        list_head *right_prev = right->prev;
         if (!is_marked_ref(right_succ)) {
-            // 標記 right_succ
             if (CAS_PTR(&(right->next), right_succ, get_marked_ref(right_succ)) == right_succ) {
-                // 成功標記，更新 left 的 next 指標
-                if (CAS_PTR(&(left->next), right, right_succ) == right)
-                    return true;
+                if (CAS_PTR(&(left->next), right, right_succ) == right) {
+                    if (CAS_PTR(&(right_succ->prev), right, right_prev) == right) {
+                        return true;
+                    }
+                }
             }
         }
     }
