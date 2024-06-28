@@ -46,11 +46,31 @@ int main() {
     print_list(head);
     print_list_reverse(head);
 
-    bool c = list_remove(head, 20);
-    printf("Is removing seccess?%d\n",c);
-    printf("%p\n",head->prev->prev->prev->next);
-    printf("aaa");
+    list_insert(head, 15);
     print_list(head);
     print_list_reverse(head);
+
+    list_remove(head, 30);
+    print_list(head);
+    print_list_reverse(head);
+
+    list_insert(head, 17);
+    print_list(head);
+    print_list_reverse(head);
+
+    list_remove(head, 10);
+    print_list(head);
+    print_list_reverse(head);
+
+    list_insert(head, 30);
+    print_list(head);
+    print_list_reverse(head);
+
+    // bool c = list_remove(head, 20);
+    // printf("Is removing seccess?%d\n",c);
+    // printf("%p\n",head->prev->prev->prev->next);
+    // printf("aaa");
+    // print_list(head);
+    // print_list_reverse(head);
     return EXIT_SUCCESS;
 }
