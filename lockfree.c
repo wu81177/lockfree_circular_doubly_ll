@@ -65,8 +65,6 @@ static node_t *new_node(val_t val, list_head *next_node, list_head *prev_node)
 
 static list_head *list_search(list_head *head, val_t val, list_head **left_node)
 {   
-    //if(head->next == head) return head;
-
     list_head *left_node_next, *right_node;
     left_node_next = right_node = NULL;
     while (1) {

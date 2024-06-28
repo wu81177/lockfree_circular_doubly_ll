@@ -1,76 +1,36 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
+#include <pthread.h>
 #include "lockfree.h"
 #include "list.h"
 
-void print_list(list_head *head) {
-    struct list_head *pos;
-    node_t *entry;
-    printf("List: ");
-    list_for_each(pos, head) {
-        entry = list_entry(pos, node_t, list);
-        printf("%ld ", entry->data);
-    }
-    printf("\n");
-}
+#define NUM_THREADS 4
+#define NUM_ITERATIONS 100
 
-void print_list_reverse(list_head *head) {
-    struct list_head *pos;
-    node_t *entry1;
-    printf("Reversed List: ");
-    for (pos = (head)->prev; pos != (head); pos = pos->prev){
-        entry1 = list_entry(pos, node_t, list);
-        printf("%ld ", entry1->data);
+struct list_head *head;
+void* thread_func(void* arg) {
+    for (int i = 0; i < NUM_ITERATIONS; ++i) {
+        list_insert(head, i);
+        list_remove(head, i);
     }
-    printf("\n");
+    return NULL;
 }
-
 
 int main() {
-    list_head *head = list_new();
-    if (!head) {
-        fprintf(stderr, "Failed to create list\n");
-        return EXIT_FAILURE;
+    pthread_t threads[NUM_THREADS];
+    head = list_new();
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        if (pthread_create(&threads[i], NULL, thread_func, NULL) != 0) {
+            perror("pthread_create");
+            return 1;
+        }
     }
-
-    list_insert(head, 20);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_insert(head, 10);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_insert(head, 30);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_insert(head, 15);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_remove(head, 30);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_insert(head, 17);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_remove(head, 10);
-    print_list(head);
-    print_list_reverse(head);
-
-    list_insert(head, 30);
-    print_list(head);
-    print_list_reverse(head);
-
-    // bool c = list_remove(head, 20);
-    // printf("Is removing seccess?%d\n",c);
-    // printf("%p\n",head->prev->prev->prev->next);
-    // printf("aaa");
-    // print_list(head);
-    // print_list_reverse(head);
-    return EXIT_SUCCESS;
+    for (int i = 0; i < NUM_THREADS; ++i) {
+        if (pthread_join(threads[i], NULL) != 0) {
+            perror("pthread_join");
+            return 1;
+        }
+    }
+    printf("All threads completed.\n");
+    return 0;
 }
