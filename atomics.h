@@ -21,6 +21,14 @@
 #define CAS_U32(a, b, c) CAS_PTR((uint32_t *)a, b, c)
 #define CAS_U64(a, b, c) CAS_PTR((uint64_t *)a, b, c)
 
+/* Atomic load */
+#define ATOMIC_LOAD(ptr) \
+  __atomic_load_n((ptr), __ATOMIC_RELAXED)
+
+/*Atomic Store*/
+#define ATOMIC_STORE(ptr, val) \
+  __atomic_store_n((ptr), (val), __ATOMIC_RELAXED)
+
 /* Fetch-and-increment */
 #define FAI_U8(a) __atomic_fetch_add(a, 1, __ATOMIC_RELAXED)
 #define FAI_U16(a) FAI_U8(a)

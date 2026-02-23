@@ -58,8 +58,8 @@ static node_t *new_node(val_t val, list_head *next_node, list_head *prev_node)
 {
     node_t *node = malloc(sizeof(node_t));
     node->data = val;
-    node->list.prev = prev_node;
-    node->list.next = next_node;
+    ATOMIC_STORE(&node->list.prev, prev_node);
+    ATOMIC_STORE(&node->list.next, next_node);
     return node;
 }
 
@@ -68,8 +68,8 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
     list_head *left_node_next, *right_node;
     left_node_next = right_node = NULL;
     while (1) {
-        list_head *t = head->next;
-        list_head *t_next = t->next;
+        list_head *t = ATOMIC_LOAD(&head->next);
+        list_head *t_next = ATOMIC_LOAD(&t->next);
         while (is_marked_ref(t_next) || (list_entry(t, node_t, list)->data < val)) {
             if (!is_marked_ref(t_next)) {
                 (*left_node) = t;
@@ -78,15 +78,15 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
             t = get_unmarked_ref(t_next);
             if (list_entry(t, node_t, list)->data == INT_MAX)
                 break;
-            t_next = t->next;
+            t_next = ATOMIC_LOAD(&t->next);
         }
         right_node = t;
         if (left_node_next == right_node) {
-            if (!is_marked_ref(right_node->next))
+            if (!is_marked_ref(ATOMIC_LOAD(&right_node->next)))
                 return right_node;
         } else {
             if (CAS_PTR(&((*left_node)->next), left_node_next, right_node) == left_node_next) {
-                if (!is_marked_ref(right_node->next))
+                if (!is_marked_ref(ATOMIC_LOAD(&right_node->next)))
                     return right_node;
             }
         }
@@ -104,7 +104,7 @@ bool list_insert(list_head *head, val_t val)
     while (1) {
         list_head *right = list_search(head, val, &left);
 
-        if (right != head->prev && list_entry(right, node_t, list)->data == val) {
+        if (right != ATOMIC_LOAD(&head->prev) && list_entry(right, node_t, list)->data == val) {
             return false;
         }
 
@@ -114,7 +114,7 @@ bool list_insert(list_head *head, val_t val)
         if (CAS_PTR(&(left->next), right, new_elem) == right) {
             while (!CAS_PTR(&(right->prev), left, new_elem)) {
                 right = list_search(head, val, &left);
-                if (right != head->prev && list_entry(right, node_t, list)->data == val) {
+                if (right != ATOMIC_LOAD(&head->prev) && list_entry(right, node_t, list)->data == val) {
                     return false;
                 }
                 new_elem->next = right;
@@ -137,8 +137,8 @@ bool list_remove(list_head *head, val_t val)
                     (list_entry(right, node_t, list)->data != val))
             return false;
 
-        list_head *right_succ = right->next;
-        list_head *right_prev = right->prev;
+        list_head *right_succ = ATOMIC_LOAD(&right->next);
+        list_head *right_prev = ATOMIC_LOAD(&right->prev);
         if (!is_marked_ref(right_succ)) {
             if (CAS_PTR(&(right->next), right_succ, get_marked_ref(right_succ)) == right_succ) {
                 if (CAS_PTR(&(left->next), right, right_succ) == right) {
