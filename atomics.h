@@ -27,10 +27,10 @@
 
 /*Atomic Store*/
 #define ATOMIC_STORE(ptr, val) \
-  __atomic_store_n((ptr), (val), __ATOMIC_RELAXED)
+  __atomic_store_n((ptr), (val), __ATOMIC_RELEASE)
 
 /* Fetch-and-increment */
-#define FAI_U8(a) __atomic_fetch_add(a, 1, __ATOMIC_RELAXED)
+#define FAI_U8(a) __atomic_fetch_add(a, 1, __ATOMIC_ACQUIRE)
 #define FAI_U16(a) FAI_U8(a)
 #define FAI_U32(a) FAI_U8(a)
 #define FAI_U64(a) FAI_U8(a)
