@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdatomic.h>
 #include "list.h"
 #include "lockfree.h"
 #include "atomics.h"
@@ -79,8 +80,12 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
             if (list_entry(t, node_t, list)->data == INT_MAX)
                 break;
             t_next = ATOMIC_LOAD(&t->next);
-        }
+        }if (!t) continue;
         right_node = t;
+        list_head *r_prev = ATOMIC_LOAD(&right_node->prev);
+        if (r_prev != (*left_node)) {
+            CAS_PTR(&right_node->prev, r_prev, (*left_node));
+        }
         if (left_node_next == right_node) {
             if (!is_marked_ref(ATOMIC_LOAD(&right_node->next)))
                 return right_node;
@@ -98,34 +103,28 @@ bool list_insert(list_head *head, val_t val)
     list_head *left = NULL;
     node_t *new_elem_node = new_node(val, NULL, NULL);
     if (!new_elem_node) return false;
-
     list_head *new_elem = &(new_elem_node->list);
 
     while (1) {
         list_head *right = list_search(head, val, &left);
 
-        if (right != ATOMIC_LOAD(&head->prev) && list_entry(right, node_t, list)->data == val) {
+        if (right != head && list_entry(right, node_t, list)->data == val) {
             return false;
         }
+        ATOMIC_STORE(&new_elem->next, right);
+        ATOMIC_STORE(&new_elem->prev, left);
 
-        new_elem->next = right;
-        new_elem->prev = left;
+        atomic_thread_fence(memory_order_release);
 
         if (CAS_PTR(&(left->next), right, new_elem) == right) {
-            while (!CAS_PTR(&(right->prev), left, new_elem)) {
-                right = list_search(head, val, &left);
-                if (right != ATOMIC_LOAD(&head->prev) && list_entry(right, node_t, list)->data == val) {
-                    return false;
-                }
-                new_elem->next = right;
-                new_elem->prev = left;
-                CAS_PTR(&(left->next), right, new_elem);
-            }
+
+            ATOMIC_STORE(&right->prev, new_elem);
+
             return true;
         }
+
     }
 }
-
 
 bool list_remove(list_head *head, val_t val)
 {
