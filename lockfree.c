@@ -34,7 +34,7 @@ list_head *list_new()
         free(head);
         return NULL;
     }
-    min_node->data = INT_MIN;
+    ATOMIC_STORE(&min_node->data, INT_MIN);
 
     node_t *max_node = malloc(sizeof(node_t));
     if (!max_node) {
@@ -42,14 +42,14 @@ list_head *list_new()
         free(head);
         return NULL;
     }
-    max_node->data = INT_MAX;
+    ATOMIC_STORE(&max_node->data, INT_MAX);
 
-    head->next = &min_node->list;
-    min_node->list.prev = head;
-    min_node->list.next = &max_node->list;
-    max_node->list.prev = &min_node->list;
-    max_node->list.next = head;
-    head->prev = &max_node->list;
+    ATOMIC_STORE(&head->next, &min_node->list);
+    ATOMIC_STORE(&min_node->list.prev, head);
+    ATOMIC_STORE(&min_node->list.next, &max_node->list);
+    ATOMIC_STORE(&max_node->list.prev, &min_node->list);
+    ATOMIC_STORE(&max_node->list.next, head);
+    ATOMIC_STORE(&head->prev, &max_node->list);
 
     return head;
 }
@@ -58,7 +58,7 @@ list_head *list_new()
 static node_t *new_node(val_t val, list_head *next_node, list_head *prev_node)
 {
     node_t *node = malloc(sizeof(node_t));
-    node->data = val;
+    ATOMIC_STORE(&node->data, val);
     ATOMIC_STORE(&node->list.prev, prev_node);
     ATOMIC_STORE(&node->list.next, next_node);
     return node;
@@ -71,13 +71,13 @@ static list_head *list_search(list_head *head, val_t val, list_head **left_node)
     while (1) {
         list_head *t = ATOMIC_LOAD(&head->next);
         list_head *t_next = ATOMIC_LOAD(&t->next);
-        while (is_marked_ref(t_next) || (list_entry(t, node_t, list)->data < val)) {
+        while (is_marked_ref(t_next) || (ATOMIC_LOAD(&(list_entry(t, node_t, list)->data)) < val)){
             if (!is_marked_ref(t_next)) {
                 (*left_node) = t;
                 left_node_next = t_next;
             }
             t = get_unmarked_ref(t_next);
-            if (list_entry(t, node_t, list)->data == INT_MAX)
+            if (ATOMIC_LOAD(&(list_entry(t, node_t, list)->data)) == INT_MAX)
                 break;
             t_next = ATOMIC_LOAD(&t->next);
         }if (!t) continue;
@@ -108,7 +108,8 @@ bool list_insert(list_head *head, val_t val)
     while (1) {
         list_head *right = list_search(head, val, &left);
 
-        if (right != head && list_entry(right, node_t, list)->data == val) {
+        val_t r_data = ATOMIC_LOAD(&(list_entry(right, node_t, list)->data));
+        if (right != head && r_data == val) {
             return false;
         }
         ATOMIC_STORE(&new_elem->next, right);
@@ -132,8 +133,8 @@ bool list_remove(list_head *head, val_t val)
     while (1) {
         list_head *right = list_search(head, val, &left);
         /* check if we found our node */
-        if ((list_entry(right, node_t, list)->data == INT_MAX) || 
-                    (list_entry(right, node_t, list)->data != val))
+        val_t r_data = ATOMIC_LOAD(&(list_entry(right, node_t, list)->data));
+        if ((r_data == INT_MAX) || (r_data != val))
             return false;
 
         list_head *right_succ = ATOMIC_LOAD(&right->next);

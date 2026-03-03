@@ -23,7 +23,7 @@
 
 /* Atomic load */
 #define ATOMIC_LOAD(ptr) \
-  __atomic_load_n((ptr), __ATOMIC_RELAXED)
+  __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
 
 /*Atomic Store*/
 #define ATOMIC_STORE(ptr, val) \

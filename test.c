@@ -4,7 +4,7 @@
 #include "lockfree.h"
 #include "list.h"
 
-#define NUM_THREADS 4
+#define NUM_THREADS 2048
 #define NUM_ITERATIONS 100
 
 struct list_head *head;
