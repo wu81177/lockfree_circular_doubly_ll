@@ -10,20 +10,11 @@
 #define NUM_ITERATIONS 100
 
 struct list_head *head;
-/*
+
 void* thread_func(void* arg) {
     for (int i = 0; i < NUM_ITERATIONS; ++i) {
-        list_insert(head, i);
-        list_remove(head, i);
-    }
-    return NULL;
-}
-*/
-void* thread_func(void* arg) {
-    for (int i = 0; i < NUM_ITERATIONS; ++i) {
-        int val = rand() % 1000; // 隨機數值
+        int val = rand() % 1000;
         list_insert(head, val);
-        // 故意不馬上刪，或者隨機刪
         if(rand() % 2) list_remove(head, val); 
     }
     return NULL;
@@ -32,14 +23,13 @@ void* thread_func(void* arg) {
 void verify_list_integrity(struct list_head *h) {
     printf("開始驗證串列線性化與結構完整性...\n");
     
-    // 假設 pthread_join 已經處理了記憶體同步
     struct list_head *curr = h->next; 
     val_t prev_val = LONG_MIN; 
     int internal_nodes = 0;
 
     while (curr) {
         node_t *curr_node = list_entry(curr, node_t, list);
-        val_t curr_val = curr_node->data; // 直接讀取
+        val_t curr_val = curr_node->data;
         
         if (curr_val < prev_val) {
             printf("[錯誤] 發現排序異常: %ld 出現在 %ld 之後！\n", (long)curr_val, (long)prev_val);
@@ -54,8 +44,6 @@ void verify_list_integrity(struct list_head *h) {
 
         prev_val = curr_val;
         
-        // 核心重點：即便不使用 atomic，還是要「手動抹除」標記位元
-        // 因為 Lock-free 串列的 next 指標可能帶有 0x1 (代表邏輯刪除)
         uintptr_t next_raw = (uintptr_t)curr->next;
         curr = (struct list_head *)(next_raw & ~0x1L); 
 
@@ -83,7 +71,6 @@ int main() {
         }
     }
     printf("All threads completed.\n");
-    // 執行最後的結構驗證
     verify_list_integrity(head);
     return 0;
 }
